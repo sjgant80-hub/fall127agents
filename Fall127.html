@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fall127 · FallWatch · The 127 Eyes That Never Blink</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#07080a;--s1:#0c0e12;--s2:#10131a;--s3:#151a22;
+--border:#1a2030;--blit:#222c3a;
+--text:#7a8494;--dim:#3e4858;--bright:#c8d0e0;--white:#eef0f6;
+--pulse:#1a6b5a;--glow:rgba(26,107,90,.3);--live:#3cc9a8;
+--warn:#c9873d;--wdim:rgba(201,135,61,.12);
+--fire:#c94444;--fdim:rgba(201,68,68,.12);
+--info:#3d80c9;--idim:rgba(61,128,201,.12);
+--gold:#c9a03e;
+--quiet:#1a3028;--elevated:#3a2a10;--firing:#3a1414;
+--serif:'Libre Baskerville',Georgia,serif;
+--mono:'JetBrains Mono','Consolas',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--serif);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--pulse);color:var(--white)}
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.012;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
+
+.shell{max-width:1400px;margin:0 auto;padding:12px}
+
+/* HEADER */
+.hdr{text-align:center;padding:24px 0 12px}
+.hdr h1{font-size:clamp(22px,4vw,36px);font-weight:700;color:var(--bright);letter-spacing:-.02em}
+.hdr h1 em{font-style:italic;color:var(--live)}
+.hdr .sub{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-top:2px;text-transform:uppercase}
+.hdr .tag{font-style:italic;font-size:13px;color:var(--text);margin-top:6px;opacity:.4}
+
+/* STATUS BAR */
+.status{display:flex;gap:16px;justify-content:center;align-items:center;padding:8px 0;flex-wrap:wrap}
+.st-item{font-family:var(--mono);font-size:10px;color:var(--dim);display:flex;align-items:center;gap:5px}
+.st-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.st-dot.on{background:var(--live);box-shadow:0 0 8px var(--glow)}
+.st-dot.off{background:var(--dim)}
+.st-dot.warn{background:var(--warn)}
+.st-dot.fire{background:var(--fire)}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;justify-content:center;padding:8px 0;flex-wrap:wrap}
+.btn{padding:7px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--dim);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s;letter-spacing:.02em}
+.btn:hover{border-color:var(--text);color:var(--text)}
+.btn.act{background:var(--pulse);border-color:var(--pulse);color:var(--white)}
+.btn.live{background:var(--fire);border-color:var(--fire);color:var(--white);animation:livepulse 2s infinite}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* SETTINGS */
+.settings{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;margin:10px 0;display:none}
+.settings.open{display:block}
+.settings h3{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.set-row{display:flex;align-items:center;gap:8px}
+.set-row label{font-family:var(--mono);font-size:9px;color:var(--dim);min-width:100px;letter-spacing:.04em}
+.set-row input{flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--bright);font-family:var(--mono);font-size:11px}
+.set-row input:focus{outline:none;border-color:var(--pulse)}
+.set-row input::placeholder{color:var(--dim);opacity:.4}
+
+/* CONVERGENCE BANNER */
+.conv-banner{display:none;background:linear-gradient(135deg,rgba(26,107,90,.15),rgba(60,201,168,.08));border:1px solid var(--pulse);border-radius:10px;padding:14px 18px;margin:10px 0;text-align:center}
+.conv-banner.active{display:block;animation:convpulse 3s infinite}
+@keyframes convpulse{0%,100%{border-color:var(--pulse)}50%{border-color:var(--live)}}
+.conv-banner h2{font-size:15px;color:var(--live);margin-bottom:4px}
+.conv-banner p{font-family:var(--mono);font-size:10px;color:var(--text)}
+
+/* AGENT GRID */
+.group{margin:10px 0}
+.group-hdr{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;user-select:none}
+.group-hdr:hover .group-name{color:var(--bright)}
+.group-letter{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--live);min-width:28px;text-align:center}
+.group-name{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;transition:color .2s}
+.group-count{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:auto;opacity:.5}
+.group-fire{font-family:var(--mono);font-size:9px;color:var(--fire);margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:4px;padding:4px 0}
+.tile{width:100%;aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;position:relative;border:1px solid transparent;font-family:var(--mono)}
+.tile .tid{font-size:11px;font-weight:600;color:var(--dim);transition:color .2s}
+.tile .tsev{position:absolute;bottom:3px;right:3px;font-size:7px;color:var(--dim);opacity:0;transition:opacity .2s}
+.tile:hover .tsev{opacity:1}
+.tile.quiet{background:var(--quiet);border-color:rgba(26,107,90,.15)}
+.tile.quiet .tid{color:rgba(60,201,168,.5)}
+.tile.elevated{background:var(--elevated);border-color:rgba(201,135,61,.2)}
+.tile.elevated .tid{color:var(--warn)}
+.tile.firing{background:var(--firing);border-color:rgba(201,68,68,.3);animation:firetile 1.5s infinite}
+.tile.firing .tid{color:var(--fire)}
+@keyframes firetile{0%,100%{border-color:rgba(201,68,68,.3)}50%{border-color:rgba(201,68,68,.6)}}
+.tile:hover{transform:scale(1.08);z-index:2;border-color:var(--bright)}
+.tile .tname{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;z-index:3;background:var(--bg);padding:1px 4px;border-radius:3px}
+.tile:hover .tname{opacity:1}
+
+/* PANELS ROW */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+@media(max-width:800px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.panel-tag{position:absolute;top:-1px;right:10px;font-family:var(--mono);font-size:7px;color:var(--dim);background:var(--bg);padding:1px 5px;border-radius:0 0 3px 3px;letter-spacing:.1em;text-transform:uppercase}
+.panel h3{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+
+/* BLOOM */
+.bloom{display:flex;gap:4px;align-items:flex-end;height:60px;margin:8px 0}
+.bloom-bar{flex:1;border-radius:3px 3px 0 0;transition:height .8s cubic-bezier(.16,1,.3,1);min-width:14px;position:relative;cursor:default}
+.bloom-bar::after{content:attr(data-val);position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--dim);opacity:0;transition:opacity .2s}
+.bloom-bar:hover::after{opacity:1}
+.bloom-labels{display:flex;gap:4px;margin-top:2px}
+.bloom-labels span{flex:1;text-align:center;font-family:var(--mono);font-size:7px;color:var(--dim);min-width:14px}
+
+/* CONVERGENCE METER */
+.conv-meter{margin:8px 0}
+.conv-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.conv-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.16,1,.3,1);background:var(--dim)}
+.conv-fill.near{background:var(--warn)}
+.conv-fill.hit{background:var(--live)}
+.conv-stats{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap}
+.conv-stat{font-family:var(--mono);font-size:10px}
+.conv-stat b{color:var(--bright)}
+
+/* HISTORY */
+.history{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;margin:10px 0;max-height:300px;overflow-y:auto}
+.history h3{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.hev{padding:8px 10px;border-left:2px solid var(--pulse);margin-bottom:6px;background:var(--s2);border-radius:0 6px 6px 0}
+.hev .hev-t{font-family:var(--mono);font-size:9px;color:var(--dim)}
+.hev .hev-d{font-size:12px;color:var(--bright);margin:3px 0}
+.hev .hev-b{font-family:var(--mono);font-size:9px;color:var(--text)}
+.hev.fire-ev{border-left-color:var(--fire)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;position:relative}
+.modal h2{font-size:16px;color:var(--bright);margin-bottom:4px}
+.modal .m-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:14px}
+.modal .m-close{position:absolute;top:12px;right:14px;font-size:20px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:var(--mono)}
+.modal .m-close:hover{color:var(--bright)}
+.modal .m-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px}
+.modal .m-row .mk{color:var(--dim)}
+.modal .m-row .mv{color:var(--bright)}
+.modal .m-sig{margin-top:10px;padding:10px;background:var(--s2);border-radius:6px}
+.modal .m-sig h4{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.modal .m-hist{max-height:150px;overflow-y:auto}
+.modal .m-hitem{font-family:var(--mono);font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)}
+
+/* FOOTER */
+.footer{text-align:center;padding:20px 0;font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:.1em;opacity:.4}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+.shell{padding:8px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:3px}
+.tile .tid{font-size:9px}
+.panels{gap:6px}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- HEADER -->
+<div class="hdr">
+<h1>Fall<em>127</em></h1>
+<div class="sub">FallWatch · The 127 Eyes That Never Blink</div>
+<div class="tag">sovereign market intelligence · MACCubeFACE(127)</div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status">
+<div class="st-item"><span class="st-dot off" id="sysDot"></span> <span id="sysLabel">Idle</span></div>
+<div class="st-item">Agents: <b id="nActive">0</b>/127</div>
+<div class="st-item">Firing: <b id="nFiring">0</b></div>
+<div class="st-item">Convergences: <b id="nConv">0</b></div>
+<div class="st-item">Cycle: <b id="nCycle">0</b></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+<button class="btn" onclick="toggleSettings()">⚙ Settings</button>
+<button class="btn" id="btnRun" onclick="toggleRun()">▶ Start Watch</button>
+<button class="btn" onclick="runCycle()">↻ Single Cycle</button>
+<button class="btn" onclick="resetAll()">⊘ Reset</button>
+<button class="btn" onclick="exportHistory()">↓ Export</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings" id="settingsPanel">
+<h3>API Configuration</h3>
+<div class="set-grid">
+<div class="set-row"><label>Gemini Key</label><input type="password" id="keyGemini" placeholder="Free tier · 60 req/min" /></div>
+<div class="set-row"><label>DeepSeek Key</label><input type="password" id="keyDeepSeek" placeholder="Free tier fallback" /></div>
+<div class="set-row"><label>Anthropic Key</label><input type="password" id="keyAnthropic" placeholder="Paid fallback" /></div>
+<div class="set-row"><label>CoinGecko Key</label><input type="password" id="keyCoinGecko" placeholder="Optional · free tier works" /></div>
+<div class="set-row"><label>NewsAPI Key</label><input type="password" id="keyNewsAPI" placeholder="For β news agents" /></div>
+<div class="set-row"><label>Cycle Interval</label><input type="number" id="cycleInterval" value="30" min="5" max="3600" placeholder="Seconds between cycles" /></div>
+</div>
+<div style="margin-top:10px;display:flex;gap:8px">
+<button class="btn act" onclick="saveSettings()">Save Keys</button>
+<button class="btn" onclick="clearKeys()">Clear All Keys</button>
+</div>
+</div>
+
+<!-- CONVERGENCE BANNER -->
+<div class="conv-banner" id="convBanner">
+<h2 id="convTitle">⟐ CONVERGENCE DETECTED</h2>
+<p id="convDetail"></p>
+</div>
+
+<!-- AGENT GRID (generated by JS) -->
+<div id="agentGrid"></div>
+
+<!-- PANELS -->
+<div class="panels">
+<!-- BLOOM VECTOR -->
+<div class="panel">
+<span class="panel-tag">bloom</span>
+<h3>Market State · 7-Ring Bloom Vector</h3>
+<div class="bloom" id="bloomChart"></div>
+<div class="bloom-labels" id="bloomLabels"></div>
+<div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:6px">
+<span>Ψ: <b id="psiVal" style="color:var(--bright)">—</b></span> ·
+<span>Risk: <b id="riskVal" style="color:var(--bright)">—</b></span> ·
+<span>Σ: <b id="sigmaVal" style="color:var(--bright)">—</b></span>
+</div>
+</div>
+
+<!-- CONVERGENCE METER -->
+<div class="panel">
+<span class="panel-tag">convergence</span>
+<h3>Signal Convergence</h3>
+<div class="conv-meter">
+<div class="conv-track"><div class="conv-fill" id="convFill" style="width:0"></div></div>
+</div>
+<div class="conv-stats">
+<div class="conv-stat">Agents firing: <b id="csAgents">0</b></div>
+<div class="conv-stat">Similarity: <b id="csSim">—</b></div>
+<div class="conv-stat">Variance: <b id="csVar">—</b></div>
+<div class="conv-stat">Threshold: <b>7 agents · 70% sim</b></div>
+</div>
+</div>
+</div>
+
+<div class="panels">
+<!-- PATTERN MATCH -->
+<div class="panel">
+<span class="panel-tag">η patterns</span>
+<h3>Historical Pattern Match</h3>
+<div id="patternPanel" style="font-family:var(--mono);font-size:11px;color:var(--dim)">
+Waiting for data...
+</div>
+</div>
+
+<!-- CONTRARIAN -->
+<div class="panel">
+<span class="panel-tag">θ contrarian</span>
+<h3>Agent 127 · The Adversarial Check</h3>
+<div id="contrarianPanel" style="font-family:var(--mono);font-size:11px;color:var(--dim)">
+Waiting for convergence event...
+</div>
+</div>
+</div>
+
+<!-- TOP SIGNALS -->
+<div class="panel" style="margin:10px 0">
+<span class="panel-tag">Ω synthesis</span>
+<h3>Top Signals · Orchestrator Output</h3>
+<div id="topSignals" style="font-family:var(--mono);font-size:11px;color:var(--dim)">
+Start a watch cycle to begin signal collection.
+</div>
+</div>
+
+<!-- HISTORY -->
+<div class="history">
+<h3>Convergence History</h3>
+<div id="historyLog">
+<div style="font-family:var(--mono);font-size:10px;color:var(--dim)">No convergence events yet.</div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+◊·κ=1 · Fall127 · FallWatch · MACCubeFACE(127) · 2⁷-1 agents · sovereign
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal" id="modal"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// Fall127 · FallWatch · Sovereign 127-Agent Architecture
+// Phase 1+2: Shared Substrate + Market Intelligence
+// ═══════════════════════════════════════════
+
+const PRIMES = [2, 3, 5, 7, 11, 13, 17];
+const RING_NAMES = ['R0·Ground', 'R1·Signal', 'R2·Gate', 'R3·Heart', 'R4·Voice', 'R5·Mirror', 'R6·Watcher'];
+const RING_SHORT = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6'];
+const RING_COLORS = ['#4a9a8a', '#3db89a', '#c9973e', '#c94a5a', '#5a8ac9', '#8a6ac9', '#3cc9a8'];
+
+const GROUPS = [
+  { id: 'alpha', letter: 'α', name: 'Market Data', range: [1, 20], type: 'A' },
+  { id: 'beta',  letter: 'β', name: 'News Sentiment', range: [21, 40], type: 'B' },
+  { id: 'gamma', letter: 'γ', name: 'Social Signal', range: [41, 60], type: 'B' },
+  { id: 'delta', letter: 'δ', name: 'On-Chain', range: [61, 80], type: 'A' },
+  { id: 'epsilon', letter: 'ε', name: 'Macro Indicators', range: [81, 100], type: 'A' },
+  { id: 'zeta',  letter: 'ζ', name: 'Cross-Correlation', range: [101, 120], type: 'C' },
+  { id: 'eta',   letter: 'η', name: 'Pattern Match', range: [121, 126], type: 'B' },
+  { id: 'theta', letter: 'θ', name: 'Contrarian', range: [127, 127], type: 'B' }
+];
+
+// ═══ AGENT DEFINITIONS ═══
+const AGENT_DEFS = [
+  // α MARKET DATA (1-20) — TYPE_A heuristic
+  {id:1,  name:'SPX',        desc:'S&P 500 index',              group:'alpha', type:'A', feed:'equity'},
+  {id:2,  name:'NDX',        desc:'Nasdaq 100',                 group:'alpha', type:'A', feed:'equity'},
+  {id:3,  name:'DJI',        desc:'Dow Jones Industrial',       group:'alpha', type:'A', feed:'equity'},
+  {id:4,  name:'RUT',        desc:'Russell 2000',               group:'alpha', type:'A', feed:'equity'},
+  {id:5,  name:'VIX',        desc:'Volatility Index',           group:'alpha', type:'A', feed:'volatility'},
+  {id:6,  name:'DXY',        desc:'US Dollar Index',            group:'alpha', type:'A', feed:'forex'},
+  {id:7,  name:'EURUSD',     desc:'Euro / US Dollar',           group:'alpha', type:'A', feed:'forex'},
+  {id:8,  name:'GBPUSD',     desc:'British Pound / US Dollar',  group:'alpha', type:'A', feed:'forex'},
+  {id:9,  name:'USDJPY',     desc:'US Dollar / Japanese Yen',   group:'alpha', type:'A', feed:'forex'},
+  {id:10, name:'XAUUSD',     desc:'Gold',                       group:'alpha', type:'A', feed:'commodity'},
+  {id:11, name:'XAGUSD',     desc:'Silver',                     group:'alpha', type:'A', feed:'commodity'},
+  {id:12, name:'CL',         desc:'Crude Oil WTI',              group:'alpha', type:'A', feed:'commodity'},
+  {id:13, name:'NG',         desc:'Natural Gas',                group:'alpha', type:'A', feed:'commodity'},
+  {id:14, name:'BTC',        desc:'Bitcoin',                    group:'alpha', type:'A', feed:'crypto'},
+  {id:15, name:'ETH',        desc:'Ethereum',                   group:'alpha', type:'A', feed:'crypto'},
+  {id:16, name:'US10Y',      desc:'10-Year Treasury Yield',     group:'alpha', type:'A', feed:'bond'},
+  {id:17, name:'US02Y',      desc:'2-Year Treasury Yield',      group:'alpha', type:'A', feed:'bond'},
+  {id:18, name:'CURVE',      desc:'Yield Curve 10y-2y Spread',  group:'alpha', type:'A', feed:'bond'},
+  {id:19, name:'HG',         desc:'Copper — Economic Bellwether',group:'alpha',type:'A', feed:'commodity'},
+  {id:20, name:'BDI',        desc:'Baltic Dry Index — Trade',   group:'alpha', type:'A', feed:'shipping'},
+
+  // β NEWS SENTIMENT (21-40) — TYPE_B femto LLM
+  {id:21, name:'TECH',       desc:'Tech sector news',           group:'beta', type:'B', feed:'news'},
+  {id:22, name:'ENERGY',     desc:'Energy sector news',         group:'beta', type:'B', feed:'news'},
+  {id:23, name:'FINANCE',    desc:'Financial sector news',      group:'beta', type:'B', feed:'news'},
+  {id:24, name:'HEALTH',     desc:'Healthcare sector news',     group:'beta', type:'B', feed:'news'},
+  {id:25, name:'REALTY',     desc:'Real estate news',           group:'beta', type:'B', feed:'news'},
+  {id:26, name:'CRYPTO',     desc:'Crypto/Web3 news',           group:'beta', type:'B', feed:'news'},
+  {id:27, name:'COMMOD',     desc:'Commodities news',           group:'beta', type:'B', feed:'news'},
+  {id:28, name:'CBANK',      desc:'Central bank communications',group:'beta', type:'B', feed:'news'},
+  {id:29, name:'GEOPOL',     desc:'Geopolitical events',        group:'beta', type:'B', feed:'news'},
+  {id:30, name:'TRADE',      desc:'Trade & tariff news',        group:'beta', type:'B', feed:'news'},
+  {id:31, name:'EMPLOY',     desc:'Employment & labor data',    group:'beta', type:'B', feed:'news'},
+  {id:32, name:'CONSUM',     desc:'Consumer sentiment',         group:'beta', type:'B', feed:'news'},
+  {id:33, name:'MANUF',      desc:'Manufacturing & PMI data',   group:'beta', type:'B', feed:'news'},
+  {id:34, name:'INFLAT',     desc:'Inflation indicators',       group:'beta', type:'B', feed:'news'},
+  {id:35, name:'EARNS',      desc:'Earnings season tracker',    group:'beta', type:'B', feed:'news'},
+  {id:36, name:'IPO/MA',     desc:'IPO & M&A activity',         group:'beta', type:'B', feed:'news'},
+  {id:37, name:'REGUL',      desc:'Regulatory changes',         group:'beta', type:'B', feed:'news'},
+  {id:38, name:'CLMATE',     desc:'Climate & weather impact',   group:'beta', type:'B', feed:'news'},
+  {id:39, name:'SUPPLY',     desc:'Supply chain disruptions',   group:'beta', type:'B', feed:'news'},
+  {id:40, name:'SANCTN',     desc:'Sanctions & embargo changes',group:'beta', type:'B', feed:'news'},
+
+  // γ SOCIAL SIGNAL (41-60) — TYPE_B femto LLM
+  {id:41, name:'WSB',        desc:'Reddit r/wallstreetbets',    group:'gamma', type:'B', feed:'social'},
+  {id:42, name:'r/INV',      desc:'Reddit r/investing',         group:'gamma', type:'B', feed:'social'},
+  {id:43, name:'r/CRY',      desc:'Reddit r/cryptocurrency',    group:'gamma', type:'B', feed:'social'},
+  {id:44, name:'r/ECN',      desc:'Reddit r/economics',         group:'gamma', type:'B', feed:'social'},
+  {id:45, name:'X·FIN',      desc:'X finance influencers',      group:'gamma', type:'B', feed:'social'},
+  {id:46, name:'X·CRY',      desc:'X crypto influencers',       group:'gamma', type:'B', feed:'social'},
+  {id:47, name:'X·MAC',      desc:'X macro analysts',           group:'gamma', type:'B', feed:'social'},
+  {id:48, name:'DISCRD',     desc:'Discord trading communities',group:'gamma', type:'B', feed:'social'},
+  {id:49, name:'TGRAM',      desc:'Telegram crypto channels',   group:'gamma', type:'B', feed:'social'},
+  {id:50, name:'STWTS',      desc:'StockTwits top movers',      group:'gamma', type:'B', feed:'social'},
+  {id:51, name:'YT·FIN',     desc:'YouTube finance trending',   group:'gamma', type:'B', feed:'social'},
+  {id:52, name:'GTRND',      desc:'Google Trends finance',      group:'gamma', type:'B', feed:'social'},
+  {id:53, name:'WIKI',       desc:'Wikipedia unusual traffic',  group:'gamma', type:'B', feed:'social'},
+  {id:54, name:'GITHUB',     desc:'GitHub trending tech',       group:'gamma', type:'B', feed:'social'},
+  {id:55, name:'LNKDN',      desc:'LinkedIn job velocity',      group:'gamma', type:'B', feed:'social'},
+  {id:56, name:'GLASSD',     desc:'Glassdoor sentiment',        group:'gamma', type:'B', feed:'social'},
+  {id:57, name:'APPST',      desc:'App store rankings',         group:'gamma', type:'B', feed:'social'},
+  {id:58, name:'AMZN',       desc:'Amazon bestseller proxy',    group:'gamma', type:'B', feed:'social'},
+  {id:59, name:'PATNT',      desc:'Patent filing velocity',     group:'gamma', type:'B', feed:'social'},
+  {id:60, name:'DOMAIN',     desc:'Domain registrations',       group:'gamma', type:'B', feed:'social'},
+
+  // δ ON-CHAIN (61-80) — TYPE_A heuristic
+  {id:61, name:'BTC·IN',     desc:'BTC exchange inflows',       group:'delta', type:'A', feed:'chain'},
+  {id:62, name:'BTC·OT',     desc:'BTC exchange outflows',      group:'delta', type:'A', feed:'chain'},
+  {id:63, name:'WHALE',      desc:'BTC whale movements >1000',  group:'delta', type:'A', feed:'chain'},
+  {id:64, name:'ETH·FL',     desc:'ETH exchange flows',         group:'delta', type:'A', feed:'chain'},
+  {id:65, name:'GAS',        desc:'ETH gas prices',             group:'delta', type:'A', feed:'chain'},
+  {id:66, name:'STABLE',     desc:'Stablecoin supply USDT/USDC',group:'delta', type:'A', feed:'chain'},
+  {id:67, name:'STB·FL',     desc:'Stablecoin exchange flows',  group:'delta', type:'A', feed:'chain'},
+  {id:68, name:'TVL',        desc:'DeFi TVL aggregate',         group:'delta', type:'A', feed:'chain'},
+  {id:69, name:'YIELD',      desc:'DeFi yield rates',           group:'delta', type:'A', feed:'chain'},
+  {id:70, name:'NFT',        desc:'NFT volume proxy',           group:'delta', type:'A', feed:'chain'},
+  {id:71, name:'HASH',       desc:'BTC mining hashrate',        group:'delta', type:'A', feed:'chain'},
+  {id:72, name:'DIFF',       desc:'BTC mining difficulty',      group:'delta', type:'A', feed:'chain'},
+  {id:73, name:'MPOOL',      desc:'BTC mempool size',           group:'delta', type:'A', feed:'chain'},
+  {id:74, name:'STAKE',      desc:'ETH staking rate',           group:'delta', type:'A', feed:'chain'},
+  {id:75, name:'L2',         desc:'Layer 2 activity',           group:'delta', type:'A', feed:'chain'},
+  {id:76, name:'BRIDGE',     desc:'Cross-chain bridge volume',  group:'delta', type:'A', feed:'chain'},
+  {id:77, name:'LIQDN',      desc:'Liquidation events',         group:'delta', type:'A', feed:'chain'},
+  {id:78, name:'OI',         desc:'Open interest futures',      group:'delta', type:'A', feed:'chain'},
+  {id:79, name:'FUND',       desc:'Funding rates perpetuals',   group:'delta', type:'A', feed:'chain'},
+  {id:80, name:'F&G',        desc:'Fear & Greed index',         group:'delta', type:'A', feed:'chain'},
+
+  // ε MACRO INDICATORS (81-100) — TYPE_A heuristic
+  {id:81, name:'US·CPI',     desc:'US CPI inflation',           group:'epsilon', type:'A', feed:'macro'},
+  {id:82, name:'US·PPI',     desc:'US PPI producer prices',     group:'epsilon', type:'A', feed:'macro'},
+  {id:83, name:'NFP',        desc:'US Non-Farm Payrolls',       group:'epsilon', type:'A', feed:'macro'},
+  {id:84, name:'CLAIMS',     desc:'US initial jobless claims',  group:'epsilon', type:'A', feed:'macro'},
+  {id:85, name:'CONFID',     desc:'US consumer confidence',     group:'epsilon', type:'A', feed:'macro'},
+  {id:86, name:'HOUSE',      desc:'US housing starts',          group:'epsilon', type:'A', feed:'macro'},
+  {id:87, name:'RETAIL',     desc:'US retail sales',            group:'epsilon', type:'A', feed:'macro'},
+  {id:88, name:'INDPRD',     desc:'US industrial production',   group:'epsilon', type:'A', feed:'macro'},
+  {id:89, name:'ISM·MF',     desc:'ISM Manufacturing PMI',      group:'epsilon', type:'A', feed:'macro'},
+  {id:90, name:'ISM·SV',     desc:'ISM Services PMI',           group:'epsilon', type:'A', feed:'macro'},
+  {id:91, name:'EU·CPI',     desc:'EU CPI',                     group:'epsilon', type:'A', feed:'macro'},
+  {id:92, name:'EU·PMI',     desc:'EU PMI Composite',           group:'epsilon', type:'A', feed:'macro'},
+  {id:93, name:'CN·PMI',     desc:'China PMI',                  group:'epsilon', type:'A', feed:'macro'},
+  {id:94, name:'CN·TRD',     desc:'China trade balance',        group:'epsilon', type:'A', feed:'macro'},
+  {id:95, name:'JP·BOJ',     desc:'Japan CPI + BOJ policy',     group:'epsilon', type:'A', feed:'macro'},
+  {id:96, name:'UK·BOE',     desc:'UK CPI + BOE policy',        group:'epsilon', type:'A', feed:'macro'},
+  {id:97, name:'SHIP',       desc:'Global shipping rates',      group:'epsilon', type:'A', feed:'macro'},
+  {id:98, name:'FOOD',       desc:'FAO food price index',       group:'epsilon', type:'A', feed:'macro'},
+  {id:99, name:'OPEC',       desc:'OPEC production decisions',  group:'epsilon', type:'A', feed:'macro'},
+  {id:100,name:'IMF',        desc:'IMF/World Bank announcements',group:'epsilon',type:'A', feed:'macro'},
+
+  // ζ CROSS-CORRELATION (101-120) — TYPE_C statistical
+  {id:101,name:'YC×VOL',     desc:'Yield curve × equity vol',   group:'zeta', type:'C', pair:[18,5]},
+  {id:102,name:'OIL×NWS',    desc:'Oil × energy news',          group:'zeta', type:'C', pair:[12,22]},
+  {id:103,name:'BTC×SOC',    desc:'BTC flow × social sentiment',group:'zeta', type:'C', pair:[61,43]},
+  {id:104,name:'AU×DX×YD',   desc:'Gold × dollar × yields',     group:'zeta', type:'C', pair:[10,6]},
+  {id:105,name:'VIX×SPX',    desc:'VIX × S&P × put/call',       group:'zeta', type:'C', pair:[5,1]},
+  {id:106,name:'HSE×EMP',    desc:'Housing × employment × consumer',group:'zeta',type:'C',pair:[86,83]},
+  {id:107,name:'FND×LIQ',    desc:'Crypto funding × liquidations',group:'zeta',type:'C', pair:[79,77]},
+  {id:108,name:'CB×YIELD',   desc:'Central bank language × yields',group:'zeta',type:'C', pair:[28,16]},
+  {id:109,name:'EARN×NDX',   desc:'Tech earnings × Nasdaq × GitHub',group:'zeta',type:'C',pair:[35,2]},
+  {id:110,name:'SHP×CMD',    desc:'Shipping × commodities × manufacturing',group:'zeta',type:'C',pair:[97,89]},
+  {id:111,name:'STB×TVL',    desc:'Stablecoin supply × DeFi TVL',group:'zeta',type:'C', pair:[66,68]},
+  {id:112,name:'SOC×PRC',    desc:'Social divergence × price',   group:'zeta', type:'C', pair:[41,14]},
+  {id:113,name:'PAT×IPO',    desc:'Patent velocity × IPO activity',group:'zeta',type:'C', pair:[59,36]},
+  {id:114,name:'FOOD×GEO',   desc:'Food prices × weather × geopolitical',group:'zeta',type:'C',pair:[98,29]},
+  {id:115,name:'HASH×DIF',   desc:'Mining hash × difficulty × price',group:'zeta',type:'C',pair:[71,72]},
+  {id:116,name:'L2×GAS',     desc:'L2 activity × ETH gas × DeFi yields',group:'zeta',type:'C',pair:[75,65]},
+  {id:117,name:'VIX·TS',     desc:'VIX term structure × credit spreads',group:'zeta',type:'C',pair:[5,16]},
+  {id:118,name:'DXY×EM',     desc:'Dollar × EM × commodities',  group:'zeta', type:'C', pair:[6,12]},
+  {id:119,name:'SENT×RTL',   desc:'Consumer sentiment × retail × employment',group:'zeta',type:'C',pair:[85,87]},
+  {id:120,name:'CLUSTER',    desc:'ALL cluster detector — mega-signal',group:'zeta',type:'C', pair:[101,119]},
+
+  // η PATTERN MATCH (121-126) — TYPE_B femto LLM
+  {id:121,name:'GFC·08',     desc:'2008 Global Financial Crisis pattern',group:'eta', type:'B', pattern:'gfc_2008'},
+  {id:122,name:'COV·20',     desc:'2020 COVID crash pattern',   group:'eta', type:'B', pattern:'covid_2020'},
+  {id:123,name:'BULL·21',    desc:'2021 crypto bull run pattern',group:'eta', type:'B', pattern:'bull_2021'},
+  {id:124,name:'HIKE·22',    desc:'2022 rate hike cycle pattern',group:'eta', type:'B', pattern:'hike_2022'},
+  {id:125,name:'SWAN',       desc:'Black Swan — unprecedented clustering',group:'eta', type:'B', pattern:'black_swan'},
+  {id:126,name:'GRIND',      desc:'Slow Grind — gradual deterioration',group:'eta', type:'B', pattern:'slow_grind'},
+
+  // θ CONTRARIAN (127) — TYPE_B femto LLM
+  {id:127,name:'CONTRA',     desc:'The Adversarial Check — What if they are ALL wrong?',group:'theta', type:'B', contrarian:true}
+];
+
+// ═══ STATE ═══
+let agents = {};        // id → { def, state, severity, anomaly, signal, history[] }
+let running = false;
+let cycleCount = 0;
+let convergenceHistory = [];
+let cycleTimer = null;
+let bloomVector = [0,0,0,0,0,0,0];
+let dbReady = false;
+let db = null;
+
+// ═══ INIT ═══
+function init() {
+  // Initialize all agents
+  AGENT_DEFS.forEach(d => {
+    agents[d.id] = {
+      def: d,
+      state: 'quiet',    // quiet | elevated | firing
+      severity: 0,       // 0-100
+      anomaly: false,
+      signal: null,
+      value: 50 + Math.random() * 10 - 5,
+      history: [],
+      lastFire: 0
+    };
+  });
+
+  renderGrid();
+  renderBloom();
+  loadSettings();
+  initDB();
+  loadHistory();
+}
+
+// ═══ INDEXEDDB ═══
+function initDB() {
+  const req = indexedDB.open('Fall127', 2);
+  req.onupgradeneeded = e => {
+    const d = e.target.result;
+    if (!d.objectStoreNames.contains('signals'))
+      d.createObjectStore('signals', { keyPath: 'id', autoIncrement: true });
+    if (!d.objectStoreNames.contains('convergences'))
+      d.createObjectStore('convergences', { keyPath: 'id', autoIncrement: true });
+    if (!d.objectStoreNames.contains('history'))
+      d.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
+  };
+  req.onsuccess = e => { db = e.target.result; dbReady = true; };
+  req.onerror = () => { console.warn('IndexedDB unavailable — running in memory only'); };
+}
+
+function dbStore(store, data) {
+  if (!db) return;
+  try {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).add({ ...data, ts: Date.now() });
+  } catch(e) { /* silent */ }
+}
+
+// ═══ SETTINGS ═══
+function loadSettings() {
+  ['keyGemini','keyDeepSeek','keyAnthropic','keyCoinGecko','keyNewsAPI','cycleInterval'].forEach(k => {
+    const v = localStorage.getItem('fw_' + k);
+    if (v) document.getElementById(k).value = v;
+  });
+}
+
+function saveSettings() {
+  ['keyGemini','keyDeepSeek','keyAnthropic','keyCoinGecko','keyNewsAPI','cycleInterval'].forEach(k => {
+    localStorage.setItem('fw_' + k, document.getElementById(k).value);
+  });
+}
+
+function clearKeys() {
+  ['keyGemini','keyDeepSeek','keyAnthropic','keyCoinGecko','keyNewsAPI'].forEach(k => {
+    localStorage.removeItem('fw_' + k);
+    document.getElementById(k).value = '';
+  });
+}
+
+function toggleSettings() {
+  document.getElementById('settingsPanel').classList.toggle('open');
+}
+
+// ═══ RENDER GRID ═══
+function renderGrid() {
+  const container = document.getElementById('agentGrid');
+  container.innerHTML = '';
+
+  GROUPS.forEach(g => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'group';
+
+    const agentsInGroup = AGENT_DEFS.filter(a => a.group === g.id);
+    const hdr = document.createElement('div');
+    hdr.className = 'group-hdr';
+    hdr.innerHTML = '<span class="group-letter">' + g.letter + '</span>' +
+      '<span class="group-name">' + g.name + ' · TYPE_' + g.type + '</span>' +
+      '<span class="group-fire" id="gf-' + g.id + '"></span>' +
+      '<span class="group-count">' + agentsInGroup.length + ' agents</span>';
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    grid.id = 'grid-' + g.id;
+
+    agentsInGroup.forEach(a => {
+      const tile = document.createElement('div');
+      tile.className = 'tile quiet';
+      tile.id = 't-' + a.id;
+      tile.onclick = () => openAgent(a.id);
+      tile.innerHTML = '<span class="tid">' + ('00' + a.id).slice(-3) + '</span>' +
+        '<span class="tsev" id="sv-' + a.id + '"></span>' +
+        '<span class="tname">' + a.name + '</span>';
+      grid.appendChild(tile);
+    });
+
+    groupDiv.appendChild(hdr);
+    groupDiv.appendChild(grid);
+    container.appendChild(groupDiv);
+  });
+}
+
+// ═══ RENDER BLOOM ═══
+function renderBloom() {
+  const chart = document.getElementById('bloomChart');
+  const labels = document.getElementById('bloomLabels');
+  chart.innerHTML = '';
+  labels.innerHTML = '';
+
+  RING_NAMES.forEach((name, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bloom-bar';
+    bar.id = 'bb-' + i;
+    bar.style.background = RING_COLORS[i];
+    bar.style.height = '3%';
+    bar.dataset.val = '0';
+    chart.appendChild(bar);
+
+    const lbl = document.createElement('span');
+    lbl.textContent = RING_SHORT[i];
+    labels.appendChild(lbl);
+  });
+}
+
+function updateBloom(vec) {
+  bloomVector = vec;
+  vec.forEach((v, i) => {
+    const bar = document.getElementById('bb-' + i);
+    if (bar) {
+      bar.style.height = Math.max(3, v) + '%';
+      bar.dataset.val = Math.round(v);
+    }
+  });
+
+  // Calculate Ψ (psi)
+  const psi = vec.reduce((a, v, i) => a + v * PRIMES[i], 0) / (100 * PRIMES.reduce((a, b) => a + b, 0));
+  document.getElementById('psiVal').textContent = psi.toFixed(3);
+
+  // Risk level
+  const risk = Math.round(100 - (vec[2] + vec[6]) / 2);
+  const riskEl = document.getElementById('riskVal');
+  riskEl.textContent = risk;
+  riskEl.style.color = risk > 70 ? 'var(--fire)' : risk > 40 ? 'var(--warn)' : 'var(--live)';
+
+  // Sigma
+  const sigma = PRIMES.reduce((a, p, i) => a * Math.pow(p, Math.round(vec[i] / 20)), 1);
+  document.getElementById('sigmaVal').textContent = sigma.toLocaleString();
+}
+
+// ═══ AGENT CYCLE ═══
+function runCycle() {
+  cycleCount++;
+  document.getElementById('nCycle').textContent = cycleCount;
+
+  const sysDot = document.getElementById('sysDot');
+  const sysLabel = document.getElementById('sysLabel');
+  sysDot.className = 'st-dot on';
+  sysLabel.textContent = 'Cycle ' + cycleCount + ' running...';
+
+  // Process each agent
+  let firingAgents = [];
+  let activeCount = 0;
+
+  AGENT_DEFS.forEach(def => {
+    const agent = agents[def.id];
+    const result = processAgent(agent);
+
+    agent.severity = result.severity;
+    agent.anomaly = result.anomaly;
+    agent.signal = result.signal;
+    agent.value = result.value;
+
+    // Update state
+    if (result.anomaly && result.severity >= 60) {
+      agent.state = 'firing';
+      agent.lastFire = Date.now();
+      firingAgents.push(agent);
+    } else if (result.severity >= 30) {
+      agent.state = 'elevated';
+    } else {
+      agent.state = 'quiet';
+    }
+
+    if (agent.state !== 'quiet') activeCount++;
+
+    // Push to history ring buffer (max 100)
+    agent.history.push({ ts: Date.now(), severity: result.severity, anomaly: result.anomaly, value: result.value });
+    if (agent.history.length > 100) agent.history.shift();
+
+    // Update tile
+    updateTile(def.id);
+  });
+
+  document.getElementById('nActive').textContent = activeCount;
+  document.getElementById('nFiring').textContent = firingAgents.length;
+
+  // Update group fire counts
+  GROUPS.forEach(g => {
+    const firing = firingAgents.filter(a => a.def.group === g.id).length;
+    const el = document.getElementById('gf-' + g.id);
+    el.textContent = firing > 0 ? firing + ' firing' : '';
+  });
+
+  // Convergence detection
+  checkConvergence(firingAgents);
+
+  // Calculate bloom vector from all agent states
+  calculateBloom();
+
+  // Update pattern match panel
+  updatePatterns();
+
+  // Update contrarian panel
+  updateContrarian(firingAgents);
+
+  // Update top signals
+  updateTopSignals(firingAgents);
+
+  // Store cycle
+  dbStore('signals', { cycle: cycleCount, firing: firingAgents.length, active: activeCount, bloom: bloomVector });
+
+  setTimeout(() => {
+    sysDot.className = 'st-dot' + (running ? ' on' : ' off');
+    sysLabel.textContent = running ? 'Watching · cycle ' + cycleCount : 'Idle · ' + cycleCount + ' cycles';
+  }, 500);
+}
+
+// ═══ PROCESS AGENT (simulation + real hooks) ═══
+function processAgent(agent) {
+  const def = agent.def;
+
+  // TYPE_C cross-correlators check their paired agents
+  if (def.type === 'C' && def.pair) {
+    const a1 = agents[def.pair[0]];
+    const a2 = agents[def.pair[1]];
+    const bothFiring = a1 && a2 && a1.anomaly && a2.anomaly;
+    const corr = bothFiring ? 60 + Math.random() * 40 : Math.random() * 30;
+    return {
+      severity: bothFiring ? corr : Math.random() * 25,
+      anomaly: bothFiring,
+      signal: bothFiring ? { pair: def.pair, correlation: corr.toFixed(1) } : null,
+      value: corr
+    };
+  }
+
+  // TYPE_B contrarian checks if too many agents agree
+  if (def.contrarian) {
+    const firing = Object.values(agents).filter(a => a.anomaly).length;
+    const echoRisk = firing > 20 ? 70 + Math.random() * 30 : firing > 10 ? 40 + Math.random() * 30 : Math.random() * 30;
+    return {
+      severity: echoRisk,
+      anomaly: echoRisk > 60,
+      signal: { firing_count: firing, echo_risk: echoRisk.toFixed(0) + '%' },
+      value: echoRisk
+    };
+  }
+
+  // TYPE_B pattern matchers compare current state to historical
+  if (def.pattern) {
+    const match = calculatePatternMatch(def.pattern);
+    return {
+      severity: match,
+      anomaly: match > 65,
+      signal: { pattern: def.pattern, similarity: match.toFixed(1) + '%' },
+      value: match
+    };
+  }
+
+  // TYPE_A and TYPE_B standard agents — simulation with realistic distributions
+  // In production, this is where real API calls go
+  const baseVolatility = getBaseVolatility(def);
+  const drift = (Math.random() - 0.48) * baseVolatility;  // slight negative bias for realism
+  const newValue = Math.max(0, Math.min(100, agent.value + drift));
+  const change = Math.abs(drift);
+  const threshold = baseVolatility * 1.8; // 2σ equivalent
+
+  // Correlated events: agents in same group tend to co-fire
+  const groupFiring = Object.values(agents).filter(a => a.def.group === def.group && a.anomaly).length;
+  const contagion = groupFiring > 3 ? 0.3 : 0;
+
+  const isAnomaly = (change > threshold) || (Math.random() < 0.02 + contagion);
+  const severity = isAnomaly ? Math.min(100, 40 + change * 8 + Math.random() * 30) : Math.min(30, change * 5);
+
+  return {
+    severity: severity,
+    anomaly: isAnomaly,
+    signal: isAnomaly ? { change: drift.toFixed(2), threshold: threshold.toFixed(2), source: def.feed } : null,
+    value: newValue
+  };
+}
+
+function getBaseVolatility(def) {
+  // Different feed types have different natural volatility
+  const map = {
+    equity: 2.5, forex: 1.5, commodity: 3.0, crypto: 5.0,
+    bond: 1.0, shipping: 2.0, volatility: 4.0, news: 3.5,
+    social: 4.0, chain: 3.5, macro: 1.5
+  };
+  return map[def.feed] || 2.5;
+}
+
+function calculatePatternMatch(pattern) {
+  // Simplified pattern matching — in production, compare bloom vectors to historical event blooms
+  const noise = Math.random() * 20;
+  const base = { gfc_2008: 15, covid_2020: 20, bull_2021: 25, hike_2022: 30, black_swan: 5, slow_grind: 35 };
+  return (base[pattern] || 10) + noise;
+}
+
+// ═══ UPDATE TILE ═══
+function updateTile(id) {
+  const agent = agents[id];
+  const tile = document.getElementById('t-' + id);
+  const sevEl = document.getElementById('sv-' + id);
+  if (!tile) return;
+
+  tile.className = 'tile ' + agent.state;
+  sevEl.textContent = agent.severity > 0 ? Math.round(agent.severity) : '';
+}
+
+// ═══ CONVERGENCE DETECTION ═══
+function checkConvergence(firingAgents) {
+  const n = firingAgents.length;
+  document.getElementById('csAgents').textContent = n;
+
+  if (n < 7) {
+    document.getElementById('csSim').textContent = '—';
+    document.getElementById('csVar').textContent = '—';
+    document.getElementById('convFill').style.width = Math.round((n / 7) * 100) + '%';
+    document.getElementById('convFill').className = 'conv-fill';
+    document.getElementById('convBanner').classList.remove('active');
+    return;
+  }
+
+  // Calculate signal similarity across firing agents using severity vectors
+  const vectors = firingAgents.map(a => ({
+    id: a.def.id,
+    group: a.def.group,
+    severity: a.severity,
+    value: a.value
+  }));
+
+  // Pairwise cosine similarity
+  let simSum = 0, simCount = 0, minSim = 100;
+  for (let i = 0; i < vectors.length; i++) {
+    for (let j = i + 1; j < vectors.length; j++) {
+      const s = cosineSim(vectors[i], vectors[j]);
+      simSum += s;
+      simCount++;
+      if (s < minSim) minSim = s;
+    }
+  }
+  const avgSim = simCount > 0 ? simSum / simCount : 0;
+
+  // Variance across severities
+  const sevs = firingAgents.map(a => a.severity / 100);
+  const sevMean = sevs.reduce((a, b) => a + b, 0) / sevs.length;
+  const variance = sevs.reduce((a, v) => a + Math.pow(v - sevMean, 2), 0) / sevs.length;
+
+  document.getElementById('csSim').textContent = avgSim.toFixed(1) + '%';
+  document.getElementById('csVar').textContent = variance.toFixed(3);
+
+  const fillPct = Math.min(100, avgSim);
+  document.getElementById('convFill').style.width = fillPct + '%';
+
+  // Check convergence thresholds
+  if (avgSim >= 70 && minSim >= 50 && variance < 0.15) {
+    document.getElementById('convFill').className = 'conv-fill hit';
+    triggerConvergence(firingAgents, avgSim, variance);
+  } else if (avgSim >= 50) {
+    document.getElementById('convFill').className = 'conv-fill near';
+    document.getElementById('convBanner').classList.remove('active');
+  } else {
+    document.getElementById('convFill').className = 'conv-fill';
+    document.getElementById('convBanner').classList.remove('active');
+  }
+}
+
+function cosineSim(a, b) {
+  // Similarity based on severity + group proximity
+  const groupSame = a.group === b.group ? 1 : 0;
+  const sevDiff = Math.abs(a.severity - b.severity) / 100;
+  const valDiff = Math.abs(a.value - b.value) / 100;
+  const sim = (1 - sevDiff * 0.5 - valDiff * 0.3 + groupSame * 0.2) * 100;
+  return Math.max(0, Math.min(100, sim));
+}
+
+function triggerConvergence(firingAgents, similarity, variance) {
+  const banner = document.getElementById('convBanner');
+  banner.classList.add('active');
+
+  const groups = {};
+  firingAgents.forEach(a => {
+    if (!groups[a.def.group]) groups[a.def.group] = [];
+    groups[a.def.group].push(a.def.name);
+  });
+
+  const groupStr = Object.entries(groups).map(([g, names]) => {
+    const grp = GROUPS.find(x => x.id === g);
+    return grp.letter + '(' + names.length + ')';
+  }).join(' · ');
+
+  document.getElementById('convTitle').textContent = '⟐ CONVERGENCE DETECTED · Cycle ' + cycleCount;
+  document.getElementById('convDetail').textContent =
+    firingAgents.length + ' agents firing · ' + similarity.toFixed(1) + '% similarity · variance ' +
+    variance.toFixed(3) + ' · ' + groupStr;
+
+  // Log to history
+  const ev = {
+    cycle: cycleCount,
+    agents: firingAgents.length,
+    similarity: similarity.toFixed(1),
+    variance: variance.toFixed(3),
+    groups: groupStr,
+    bloom: [...bloomVector],
+    ts: new Date().toISOString(),
+    topAgents: firingAgents.slice(0, 5).map(a => a.def.name).join(', ')
+  };
+
+  convergenceHistory.unshift(ev);
+  if (convergenceHistory.length > 50) convergenceHistory.pop();
+  saveHistory();
+  dbStore('convergences', ev);
+
+  document.getElementById('nConv').textContent = convergenceHistory.length;
+  renderHistory();
+}
+
+// ═══ BLOOM CALCULATION ═══
+function calculateBloom() {
+  const allAgents = Object.values(agents);
+  const firing = allAgents.filter(a => a.anomaly);
+
+  // R0 Ground: how many agents are firing (signal strength)
+  const r0 = Math.min(100, (firing.length / 127) * 400);
+
+  // R1 Signal: novelty — how different is current pattern from recent history
+  const recentFiring = firing.length;
+  const avgRecent = allAgents.reduce((a, ag) => {
+    const recent = ag.history.slice(-5);
+    return a + (recent.filter(h => h.anomaly).length / Math.max(1, recent.length));
+  }, 0) / 127;
+  const r1 = Math.min(100, Math.abs(recentFiring / 127 - avgRecent) * 500 + 30);
+
+  // R2 Gate: what signals are MISSING that should be present
+  const groupCoverage = GROUPS.map(g => {
+    const inGroup = allAgents.filter(a => a.def.group === g.id);
+    const firingInGroup = inGroup.filter(a => a.anomaly);
+    return firingInGroup.length / inGroup.length;
+  });
+  const minCoverage = Math.min(...groupCoverage);
+  const r2 = Math.min(100, (1 - minCoverage) * 60 + 20);
+
+  // R3 Heart: sentiment direction across firing agents
+  const sentimentVals = firing.map(a => a.value);
+  const avgSentiment = sentimentVals.length > 0 ? sentimentVals.reduce((a, b) => a + b, 0) / sentimentVals.length : 50;
+  const r3 = avgSentiment;
+
+  // R4 Voice: signal vs noise ratio
+  const signalPower = firing.reduce((a, ag) => a + ag.severity, 0);
+  const noisePower = allAgents.filter(a => !a.anomaly).reduce((a, ag) => a + ag.severity, 0);
+  const r4 = Math.min(100, (signalPower / Math.max(1, signalPower + noisePower)) * 200);
+
+  // R5 Mirror: does the system recognise its own pattern
+  const patternAgents = allAgents.filter(a => a.def.pattern);
+  const maxPatternMatch = patternAgents.reduce((max, a) => Math.max(max, a.severity), 0);
+  const r5 = maxPatternMatch;
+
+  // R6 Watcher: meta — is convergence real or noise
+  const contrarianAgent = agents[127];
+  const r6 = contrarianAgent ? 100 - contrarianAgent.severity : 50;
+
+  updateBloom([r0, r1, r2, r3, r4, r5, r6]);
+}
+
+// ═══ PATTERN PANEL ═══
+function updatePatterns() {
+  const panel = document.getElementById('patternPanel');
+  const patterns = AGENT_DEFS.filter(d => d.pattern).map(d => {
+    const ag = agents[d.id];
+    return { name: d.name, desc: d.desc, match: ag.severity, pattern: d.pattern };
+  }).sort((a, b) => b.match - a.match);
+
+  panel.innerHTML = patterns.map(p => {
+    const color = p.match > 65 ? 'var(--fire)' : p.match > 40 ? 'var(--warn)' : 'var(--dim)';
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="color:var(--text)">' + p.name + '</span>' +
+      '<span style="color:' + color + '">' + p.match.toFixed(1) + '%</span></div>';
+  }).join('');
+}
+
+// ═══ CONTRARIAN PANEL ═══
+function updateContrarian(firingAgents) {
+  const panel = document.getElementById('contrarianPanel');
+  const ag = agents[127];
+  if (!ag) return;
+
+  const echoRisk = ag.severity;
+  const color = echoRisk > 60 ? 'var(--fire)' : echoRisk > 40 ? 'var(--warn)' : 'var(--live)';
+
+  // Determine blind spots
+  const groupFiring = {};
+  GROUPS.forEach(g => {
+    const inGroup = Object.values(agents).filter(a => a.def.group === g.id);
+    groupFiring[g.id] = inGroup.filter(a => a.anomaly).length / inGroup.length;
+  });
+  const blindSpot = Object.entries(groupFiring).sort((a, b) => a[1] - b[1])[0];
+  const blindGroup = GROUPS.find(g => g.id === blindSpot[0]);
+
+  panel.innerHTML =
+    '<div style="margin-bottom:8px"><span style="color:var(--dim)">Echo risk: </span><span style="color:' + color + ';font-size:16px;font-weight:600">' + echoRisk.toFixed(0) + '%</span></div>' +
+    '<div style="color:var(--text);font-size:10px;margin-bottom:6px">' +
+    (echoRisk > 60 ? '⚠ High agreement among agents — potential echo chamber. Check data source correlation.' :
+     echoRisk > 40 ? 'Moderate consensus. Some independent signals confirming.' :
+     'Low agreement — signals are diverse. Convergence events are more trustworthy.') + '</div>' +
+    '<div style="color:var(--dim);font-size:10px">Biggest blind spot: <span style="color:var(--warn)">' +
+    blindGroup.letter + ' ' + blindGroup.name + '</span> (' + (blindSpot[1] * 100).toFixed(0) + '% coverage)</div>' +
+    '<div style="color:var(--dim);font-size:10px;margin-top:4px">Firing agents: ' + firingAgents.length + '/127</div>';
+}
+
+// ═══ TOP SIGNALS ═══
+function updateTopSignals(firingAgents) {
+  const panel = document.getElementById('topSignals');
+  if (firingAgents.length === 0) {
+    panel.innerHTML = '<span style="color:var(--dim)">No anomalies detected this cycle.</span>';
+    return;
+  }
+
+  const top = firingAgents.sort((a, b) => b.severity - a.severity).slice(0, 10);
+  panel.innerHTML = top.map((a, i) => {
+    const grp = GROUPS.find(g => g.id === a.def.group);
+    const sigStr = a.signal ? Object.entries(a.signal).map(([k, v]) => k + ':' + v).join(' · ') : '';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="color:var(--fire);min-width:20px">' + (i + 1) + '.</span>' +
+      '<span style="color:var(--bright);min-width:60px">' + a.def.name + '</span>' +
+      '<span style="color:var(--dim);min-width:20px">' + grp.letter + '</span>' +
+      '<span style="color:var(--warn)">' + Math.round(a.severity) + '</span>' +
+      '<span style="color:var(--dim);font-size:9px;flex:1;text-align:right">' + sigStr + '</span></div>';
+  }).join('');
+}
+
+// ═══ AGENT MODAL ═══
+function openAgent(id) {
+  const agent = agents[id];
+  const def = agent.def;
+  const grp = GROUPS.find(g => g.id === def.group);
+
+  const modal = document.getElementById('modal');
+  const stateColor = agent.state === 'firing' ? 'var(--fire)' : agent.state === 'elevated' ? 'var(--warn)' : 'var(--live)';
+
+  let html = '<button class="m-close" onclick="closeModal()">&times;</button>' +
+    '<h2>' + def.name + ' <span style="color:' + stateColor + ';font-size:12px">' + agent.state.toUpperCase() + '</span></h2>' +
+    '<div class="m-sub">' + grp.letter + ' ' + grp.name + ' · Agent ' + ('00' + def.id).slice(-3) + ' · TYPE_' + def.type + '</div>' +
+    '<p style="font-size:12px;color:var(--text);margin-bottom:14px">' + def.desc + '</p>';
+
+  // Current state
+  html += '<div class="m-sig"><h4>Current Signal</h4>' +
+    '<div class="m-row"><span class="mk">Severity</span><span class="mv">' + Math.round(agent.severity) + '/100</span></div>' +
+    '<div class="m-row"><span class="mk">Anomaly</span><span class="mv" style="color:' + (agent.anomaly ? 'var(--fire)' : 'var(--live)') + '">' + (agent.anomaly ? 'YES' : 'NO') + '</span></div>' +
+    '<div class="m-row"><span class="mk">Value</span><span class="mv">' + agent.value.toFixed(2) + '</span></div>';
+
+  if (agent.signal) {
+    Object.entries(agent.signal).forEach(([k, v]) => {
+      html += '<div class="m-row"><span class="mk">' + k + '</span><span class="mv">' + v + '</span></div>';
+    });
+  }
+  html += '</div>';
+
+  // Cross-correlator pairs
+  if (def.pair) {
+    const a1 = agents[def.pair[0]];
+    const a2 = agents[def.pair[1]];
+    html += '<div class="m-sig"><h4>Paired Agents</h4>' +
+      '<div class="m-row"><span class="mk">' + a1.def.name + ' (' + def.pair[0] + ')</span><span class="mv">' + (a1.anomaly ? 'FIRING' : 'quiet') + '</span></div>' +
+      '<div class="m-row"><span class="mk">' + a2.def.name + ' (' + def.pair[1] + ')</span><span class="mv">' + (a2.anomaly ? 'FIRING' : 'quiet') + '</span></div></div>';
+  }
+
+  // History
+  if (agent.history.length > 0) {
+    html += '<div class="m-sig"><h4>Signal History (last ' + Math.min(20, agent.history.length) + ')</h4><div class="m-hist">';
+    agent.history.slice(-20).reverse().forEach(h => {
+      const c = h.anomaly ? 'var(--fire)' : 'var(--dim)';
+      html += '<div class="m-hitem"><span style="color:' + c + '">' + (h.anomaly ? '● ' : '○ ') + '</span>' +
+        'sev:' + Math.round(h.severity) + ' val:' + h.value.toFixed(1) +
+        ' <span style="opacity:.5">' + new Date(h.ts).toLocaleTimeString() + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+
+  modal.innerHTML = html;
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+}
+
+// ═══ HISTORY ═══
+function renderHistory() {
+  const el = document.getElementById('historyLog');
+  if (convergenceHistory.length === 0) {
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--dim)">No convergence events yet.</div>';
+    return;
+  }
+
+  el.innerHTML = convergenceHistory.slice(0, 20).map(ev => {
+    return '<div class="hev">' +
+      '<div class="hev-t">' + new Date(ev.ts).toLocaleString() + ' · Cycle ' + ev.cycle + '</div>' +
+      '<div class="hev-d">' + ev.agents + ' agents · ' + ev.similarity + '% similarity · var ' + ev.variance + '</div>' +
+      '<div class="hev-b">' + ev.groups + ' · Top: ' + ev.topAgents + '</div></div>';
+  }).join('');
+}
+
+function saveHistory() {
+  try { localStorage.setItem('fw_history', JSON.stringify(convergenceHistory)); } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    const h = localStorage.getItem('fw_history');
+    if (h) { convergenceHistory = JSON.parse(h); renderHistory(); }
+    document.getElementById('nConv').textContent = convergenceHistory.length;
+  } catch(e) {}
+}
+
+function exportHistory() {
+  const data = {
+    exported: new Date().toISOString(),
+    cycles: cycleCount,
+    convergences: convergenceHistory,
+    currentBloom: bloomVector,
+    agentStates: Object.values(agents).map(a => ({
+      id: a.def.id, name: a.def.name, group: a.def.group,
+      state: a.state, severity: a.severity, anomaly: a.anomaly
+    }))
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'fall127-export-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══ RUN/STOP ═══
+function toggleRun() {
+  running = !running;
+  const btn = document.getElementById('btnRun');
+
+  if (running) {
+    btn.textContent = '■ Stop Watch';
+    btn.className = 'btn live';
+    document.getElementById('sysDot').className = 'st-dot on';
+    document.getElementById('sysLabel').textContent = 'Watching...';
+
+    const interval = parseInt(document.getElementById('cycleInterval').value) || 30;
+    runCycle();
+    cycleTimer = setInterval(runCycle, interval * 1000);
+  } else {
+    btn.textContent = '▶ Start Watch';
+    btn.className = 'btn';
+    document.getElementById('sysDot').className = 'st-dot off';
+    document.getElementById('sysLabel').textContent = 'Idle · ' + cycleCount + ' cycles';
+
+    if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; }
+  }
+}
+
+function resetAll() {
+  if (running) toggleRun();
+  cycleCount = 0;
+  convergenceHistory = [];
+  document.getElementById('nCycle').textContent = '0';
+  document.getElementById('nConv').textContent = '0';
+  document.getElementById('nActive').textContent = '0';
+  document.getElementById('nFiring').textContent = '0';
+  document.getElementById('convBanner').classList.remove('active');
+  document.getElementById('historyLog').innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--dim)">No convergence events yet.</div>';
+  document.getElementById('topSignals').textContent = 'Start a watch cycle to begin signal collection.';
+  document.getElementById('patternPanel').textContent = 'Waiting for data...';
+  document.getElementById('contrarianPanel').textContent = 'Waiting for convergence event...';
+  localStorage.removeItem('fw_history');
+
+  Object.values(agents).forEach(a => {
+    a.state = 'quiet'; a.severity = 0; a.anomaly = false;
+    a.signal = null; a.history = []; a.value = 50 + Math.random() * 10 - 5;
+    updateTile(a.def.id);
+  });
+
+  updateBloom([0,0,0,0,0,0,0]);
+  document.getElementById('convFill').style.width = '0';
+  document.getElementById('csSim').textContent = '—';
+  document.getElementById('csVar').textContent = '—';
+  document.getElementById('csAgents').textContent = '0';
+}
+
+// ═══ KEYBOARD ═══
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === ' ' && !e.target.matches('input,textarea')) { e.preventDefault(); toggleRun(); }
+  if (e.key === 'c' && !e.target.matches('input,textarea')) runCycle();
+});
+
+// ═══ BOOT ═══
+init();
+</script>
+</body>
+</html>
