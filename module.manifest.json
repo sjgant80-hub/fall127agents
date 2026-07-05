@@ -1,0 +1,18 @@
+{
+  "$schema": "https://sjgant80-hub.github.io/fallhub/modules/manifest.schema.json",
+  "name": "fall127agents",
+  "version": "1.0.0",
+  "publisher": "AI-Native Solutions",
+  "publisher_url": "https://www.ai-nativesolutions.com/",
+  "licence": "MIT",
+  "description": "127-agent audit swarm · adversarial verification of any plan · parallel scrutiny",
+  "provides": ["audit_swarm","adversarial_verify","parallel_review"],
+  "tools": [],
+  "kernel_extension": {},
+  "compatible_verticals": ["*"],
+  "requires": ["byok_adapter@>=1.0.0"],
+  "ui_surfaces": [],
+  "mit": true,
+  "konomi_seal": "◊·κ=1",
+  "estate": true
+}
