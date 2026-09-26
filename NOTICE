@@ -1,0 +1,14 @@
+fall127agents
+Copyright (c) 2026 Simon Gant — the FallForge estate (sjgant80-hub)
+
+fall127agents's own code and additions are licensed under the MIT License (see LICENSE).
+The MIT license covers the estate's own code only. Cited third-party work below remains
+its author's own.
+
+PROVENANCE
+
+- fall127agents is forked from Thomas Frumkin's MACCubeFACE lattice (MianoCube,
+  https://github.com/teslasolar/MianoCube), used with his permission, and is built on the
+  Konomi architecture he created. Powered by the Konomi architecture, created by Thomas
+  Frumkin. The MACCubeFACE lattice — the 127 / seven-ring capability structure — is Thomas
+  Frumkin's; it remains his.

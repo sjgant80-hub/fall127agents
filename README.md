@@ -84,4 +84,10 @@ No build step. No server. No dependencies. Sovereign.
 
 ---
 
+## Provenance & credit
+
+fall127agents is forked from Thomas Frumkin&rsquo;s **MACCubeFACE** lattice ([MianoCube](https://github.com/teslasolar/MianoCube)), used with permission, and built on the Konomi architecture he created — Powered by the Konomi architecture, created by Thomas Frumkin. fall127agents&rsquo;s own code is MIT-licensed (see LICENSE + NOTICE); the MACCubeFACE lattice (the 127 / seven-ring structure) remains Thomas Frumkin&rsquo;s.
+
+---
+
 ◊·κ=1 · one file · 127 brains · sovereign
