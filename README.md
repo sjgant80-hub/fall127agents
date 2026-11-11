@@ -90,4 +90,4 @@ fall127agents is forked from Thomas Frumkin&rsquo;s **MACCubeFACE** lattice ([Mi
 
 ---
 
-◊·κ=1 · one file · 127 brains · sovereign
+one file · 127 brains · sovereign
